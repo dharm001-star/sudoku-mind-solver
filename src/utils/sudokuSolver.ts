@@ -6,6 +6,14 @@
 export type SudokuBoard = (number | null)[][];
 export type SolverCallback = (board: SudokuBoard, row: number, col: number) => void;
 
+export interface SolverStep {
+  board: SudokuBoard;
+  row: number;
+  col: number;
+  value: number | null;
+  action: 'try' | 'backtrack';
+}
+
 /**
  * Check if placing a number at given position is valid
  */
@@ -90,6 +98,52 @@ export const solveSudoku = async (
   }
 
   return false;
+};
+
+/**
+ * Solve and collect all steps for manual navigation
+ */
+export const getSolvingSteps = (board: SudokuBoard): SolverStep[] => {
+  const steps: SolverStep[] = [];
+  const boardCopy = board.map(row => [...row]);
+  
+  const solveWithSteps = (currentBoard: SudokuBoard): boolean => {
+    const empty = findEmpty(currentBoard);
+    if (!empty) return true;
+
+    const [row, col] = empty;
+
+    for (let num = 1; num <= 9; num++) {
+      if (isValid(currentBoard, row, col, num)) {
+        currentBoard[row][col] = num;
+        steps.push({
+          board: currentBoard.map(r => [...r]),
+          row,
+          col,
+          value: num,
+          action: 'try'
+        });
+
+        if (solveWithSteps(currentBoard)) {
+          return true;
+        }
+
+        currentBoard[row][col] = null;
+        steps.push({
+          board: currentBoard.map(r => [...r]),
+          row,
+          col,
+          value: null,
+          action: 'backtrack'
+        });
+      }
+    }
+
+    return false;
+  };
+
+  solveWithSteps(boardCopy);
+  return steps;
 };
 
 /**

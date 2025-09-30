@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Loader2, Play, RotateCcw, Zap, Sparkles, Moon, Sun } from 'lucide-react';
+import { Loader2, Play, RotateCcw, Zap, Sparkles, Moon, Sun, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ControlPanelProps {
@@ -12,9 +12,11 @@ interface ControlPanelProps {
   onSolveInstant: () => void;
   onClear: () => void;
   onGenerate: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  onStepByStep: () => void;
   onToggleTheme: () => void;
   isSolving: boolean;
   isDarkMode: boolean;
+  disabled?: boolean;
 }
 
 const ControlPanel = ({
@@ -22,9 +24,11 @@ const ControlPanel = ({
   onSolveInstant,
   onClear,
   onGenerate,
+  onStepByStep,
   onToggleTheme,
   isSolving,
   isDarkMode,
+  disabled = false,
 }: ControlPanelProps) => {
   return (
     <div className="space-y-6">
@@ -32,7 +36,7 @@ const ControlPanel = ({
       <div className="flex flex-wrap gap-3 justify-center">
         <Button
           onClick={onSolve}
-          disabled={isSolving}
+          disabled={isSolving || disabled}
           size="lg"
           className={cn(
             "bg-gradient-primary hover:opacity-90 shadow-md transition-all",
@@ -54,7 +58,7 @@ const ControlPanel = ({
 
         <Button
           onClick={onSolveInstant}
-          disabled={isSolving}
+          disabled={isSolving || disabled}
           size="lg"
           variant="outline"
           className="font-semibold px-6 shadow-sm hover:shadow-md transition-all"
@@ -62,10 +66,21 @@ const ControlPanel = ({
           <Zap className="mr-2 h-5 w-5" />
           Solve Instantly
         </Button>
+        
+        <Button
+          onClick={onStepByStep}
+          disabled={isSolving || disabled}
+          size="lg"
+          variant="outline"
+          className="font-semibold px-6 shadow-sm hover:shadow-md transition-all"
+        >
+          <GitBranch className="mr-2 h-5 w-5" />
+          Step by Step
+        </Button>
 
         <Button
           onClick={onClear}
-          disabled={isSolving}
+          disabled={isSolving || disabled}
           size="lg"
           variant="outline"
           className="font-semibold px-6 shadow-sm hover:shadow-md transition-all"
@@ -85,7 +100,7 @@ const ControlPanel = ({
         <div className="flex flex-wrap gap-3 justify-center">
           <Button
             onClick={() => onGenerate('easy')}
-            disabled={isSolving}
+            disabled={isSolving || disabled}
             variant="secondary"
             className="font-medium"
           >
@@ -94,7 +109,7 @@ const ControlPanel = ({
           
           <Button
             onClick={() => onGenerate('medium')}
-            disabled={isSolving}
+            disabled={isSolving || disabled}
             variant="secondary"
             className="font-medium"
           >
@@ -103,7 +118,7 @@ const ControlPanel = ({
           
           <Button
             onClick={() => onGenerate('hard')}
-            disabled={isSolving}
+            disabled={isSolving || disabled}
             variant="secondary"
             className="font-medium"
           >

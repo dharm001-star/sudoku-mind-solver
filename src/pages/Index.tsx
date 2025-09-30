@@ -6,7 +6,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import SudokuGrid from '@/components/SudokuGrid';
 import ControlPanel from '@/components/ControlPanel';
-import { SudokuBoard, solveSudoku, solveSudokuInstant } from '@/utils/sudokuSolver';
+import ImageUpload from '@/components/ImageUpload';
+import StepController from '@/components/StepController';
+import { SudokuBoard, solveSudoku, solveSudokuInstant, getSolvingSteps, SolverStep } from '@/utils/sudokuSolver';
 import { createEmptyBoard, generateSudoku, examplePuzzle } from '@/utils/sudokuGenerator';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -18,6 +20,11 @@ const Index = () => {
   const [isSolving, setIsSolving] = useState(false);
   const [solvingCell, setSolvingCell] = useState<{ row: number; col: number } | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Step-by-step solving state
+  const [solvingSteps, setSolvingSteps] = useState<SolverStep[]>([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isStepMode, setIsStepMode] = useState(false);
 
   // Initialize with example puzzle
   useEffect(() => {
@@ -161,6 +168,92 @@ const Index = () => {
   }, [loadPuzzle]);
 
   /**
+   * Handle image upload
+   */
+  const handleImageUpload = useCallback((extractedBoard: SudokuBoard) => {
+    loadPuzzle(extractedBoard);
+  }, [loadPuzzle]);
+
+  /**
+   * Start step-by-step solving
+   */
+  const handleStepByStep = useCallback(() => {
+    const boardCopy = board.map(row => [...row]);
+    const steps = getSolvingSteps(boardCopy);
+    
+    if (steps.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "❌ No Solution",
+        description: "This puzzle cannot be solved.",
+      });
+      return;
+    }
+
+    setSolvingSteps(steps);
+    setCurrentStepIndex(0);
+    setIsStepMode(true);
+    
+    toast({
+      title: "🎯 Step Mode Active",
+      description: "Use Next Step to solve one step at a time.",
+    });
+  }, [board]);
+
+  /**
+   * Navigate to next step
+   */
+  const handleNextStep = useCallback(() => {
+    if (currentStepIndex < solvingSteps.length) {
+      const step = solvingSteps[currentStepIndex];
+      setBoard(step.board);
+      setSolvingCell({ row: step.row, col: step.col });
+      setCurrentStepIndex(prev => prev + 1);
+      
+      if (currentStepIndex + 1 >= solvingSteps.length) {
+        toast({
+          title: "🎉 Puzzle Solved!",
+          description: "All steps completed.",
+        });
+        setIsStepMode(false);
+      }
+    }
+  }, [currentStepIndex, solvingSteps]);
+
+  /**
+   * Navigate to previous step
+   */
+  const handlePrevStep = useCallback(() => {
+    if (currentStepIndex > 0) {
+      const step = solvingSteps[currentStepIndex - 1];
+      setBoard(step.board);
+      setSolvingCell({ row: step.row, col: step.col });
+      setCurrentStepIndex(prev => prev - 1);
+    }
+  }, [currentStepIndex, solvingSteps]);
+
+  /**
+   * Reset step mode
+   */
+  const handleResetSteps = useCallback(() => {
+    setIsStepMode(false);
+    setSolvingSteps([]);
+    setCurrentStepIndex(0);
+    setSolvingCell(null);
+    
+    // Restore original puzzle
+    const newBoard = board.map(row => [...row]);
+    board.forEach((row, i) => {
+      row.forEach((cell, j) => {
+        if (!fixedCells.has(`${i}-${j}`)) {
+          newBoard[i][j] = null;
+        }
+      });
+    });
+    setBoard(newBoard);
+  }, [board, fixedCells]);
+
+  /**
    * Toggle dark mode
    */
   const handleToggleTheme = useCallback(() => {
@@ -203,10 +296,33 @@ const Index = () => {
                 onSolveInstant={handleSolveInstant}
                 onClear={handleClear}
                 onGenerate={handleGenerate}
+                onStepByStep={handleStepByStep}
                 onToggleTheme={handleToggleTheme}
                 isSolving={isSolving}
                 isDarkMode={isDarkMode}
+                disabled={isStepMode}
               />
+              
+              {/* Image Upload */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <ImageUpload 
+                  onBoardExtracted={handleImageUpload}
+                  disabled={isSolving || isStepMode}
+                />
+              </div>
+              
+              {/* Step Controller */}
+              {isStepMode && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <StepController
+                    currentStep={currentStepIndex}
+                    totalSteps={solvingSteps.length}
+                    onNextStep={handleNextStep}
+                    onPrevStep={handlePrevStep}
+                    onReset={handleResetSteps}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Instructions */}
