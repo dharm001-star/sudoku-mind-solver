@@ -15,4 +15,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+    // Configure static file serving
+  publicDir: "public",
+  // Ensure proper MIME types for HTML files
+  optimizeDeps: {
+    exclude: ["*.html"]
+  }
 }));

@@ -46,12 +46,12 @@ const ControlPanel = ({
           {isSolving ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Solving...
+              Solving via SAT...
             </>
           ) : (
             <>
               <Play className="mr-2 h-5 w-5" />
-              Solve with Animation
+              Solve (SAT)
             </>
           )}
         </Button>

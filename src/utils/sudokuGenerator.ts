@@ -3,7 +3,7 @@
  * Generates valid sudoku puzzles with varying difficulty levels
  */
 
-import { isValid, solveSudokuInstant, SudokuBoard } from './sudokuSolver';
+import { isValid, SudokuBoard } from './sudokuSolver';
 
 /**
  * Create an empty sudoku board

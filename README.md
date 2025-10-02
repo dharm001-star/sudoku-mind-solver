@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# 🧩 Sudoku Solver using Propositional Logic (SAT)
 
-## Project info
+This project is a **Sudoku Solver** that uses **Propositional Logic** and a **SAT Solver**.  
+The main idea is to encode Sudoku rules into **Boolean logic (CNF clauses)** and then solve them using a SAT engine.
 
-**URL**: https://lovable.dev/projects/20a0d46f-cd70-44b4-99dc-c457909b57b6
+---
 
-## How can I edit this code?
+## 🚀 Features
+- Encode Sudoku puzzle into **CNF (Conjunctive Normal Form)**
+- Apply Sudoku constraints:
+  - ✅ One number per cell  
+  - ✅ Unique numbers in each row, column, and 3×3 block  
+  - ✅ Respect given clues  
+- Use a SAT solver to check satisfiability
+- Output a solved Sudoku grid (if SAT) or report UNSAT (no solution)
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 📖 How It Works
+1. **Encode Puzzle**  
+   - Each cell `(row, col)` and digit `(1–9)` is represented as a Boolean variable `X[r][c][d]`.  
+   - Example: `X[1][1][5] = True` means *Cell (1,1) contains 5*.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/20a0d46f-cd70-44b4-99dc-c457909b57b6) and start prompting.
+2. **Sudoku Rules in Logic**
+   - **Cell Rule**: Each cell has exactly one digit  
+     `(X[r][c][1] ∨ X[r][c][2] ∨ … ∨ X[r][c][9])`  
+   - **Row Rule**: Each digit appears once per row  
+   - **Column Rule**: Each digit appears once per column  
+   - **Block Rule**: Each digit appears once per 3×3 subgrid  
+   - **Clues**: If puzzle says cell `(r,c) = d`, we add clause `X[r][c][d]`
 
-Changes made via Lovable will be committed automatically to this repo.
+3. **SAT Solver**
+   - The CNF clauses are given to a SAT solver (like MiniSAT ).  
+   - Solver returns either:  
+     - **SAT** → A valid assignment exists → Sudoku solved  
+     - **UNSAT** → No solution exists  
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Technologies Used
+- **Language**: C++ 
+- **Solver**: MiniSAT / custom DPLL implementation  
+- **Optional (for visualization)**: React + Tailwind CSS  
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 📂 Project Structure
+📦 sudoku-sat-solver
+┣ 📜 README.md
+┣ 📜 sudoku.cpp (or sudoku.py) # Core solver
+┣ 📜 cnf_encoder.cpp # Encode Sudoku rules into CNF
+┣ 📜 solver.cpp # SAT solver integration
+┣ 📂 puzzles/ # Example Sudoku puzzles
+┗ 📂 output/ # Solved Sudoku grids
 
+yaml
+Copy code
+
+---
+
+## ▶️ How to Run
+
+### C++ (MiniSAT Example)
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone repo
 git clone <YOUR_GIT_URL>
+cd sudoku-sat-solver
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Compile
+g++ sudoku.cpp -o sudoku
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/20a0d46f-cd70-44b4-99dc-c457909b57b6) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Step 3: Run with puzzle input
+./sudoku puzzles/input.txt

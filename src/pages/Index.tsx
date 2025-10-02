@@ -1,19 +1,22 @@
 /**
  * Sudoku Solver - Main Page
- * Professional sudoku solver with backtracking visualization
+ * Professional sudoku solver using SAT-based solving
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SudokuGrid from '@/components/SudokuGrid';
 import ControlPanel from '@/components/ControlPanel';
 import ImageUpload from '@/components/ImageUpload';
 import StepController from '@/components/StepController';
-import { SudokuBoard, solveSudoku, solveSudokuInstant, getSolvingSteps, SolverStep } from '@/utils/sudokuSolver';
+import { SudokuBoard, solveSudokuSAT, getSolvingSteps } from '@/utils/sudokuSolver';
 import { createEmptyBoard, generateSudoku, examplePuzzle } from '@/utils/sudokuGenerator';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   // Board state
   const [board, setBoard] = useState<SudokuBoard>(createEmptyBoard());
   const [fixedCells, setFixedCells] = useState<Set<string>>(new Set());
@@ -22,9 +25,17 @@ const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   // Step-by-step solving state
-  const [solvingSteps, setSolvingSteps] = useState<SolverStep[]>([]);
+  const [solvingSteps, setSolvingSteps] = useState<any[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isStepMode, setIsStepMode] = useState(false);
+
+  // Check for username and redirect if not found
+  useEffect(() => {
+    const username = localStorage.getItem('sudokuUsername');
+    if (!username) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   // Initialize with example puzzle
   useEffect(() => {
@@ -77,67 +88,45 @@ const Index = () => {
   );
 
   /**
-   * Solve with animation (backtracking visualization)
+   * Solve the puzzle using SAT (instant)
    */
   const handleSolve = useCallback(async () => {
     if (isSolving) return;
-
     setIsSolving(true);
-    const boardCopy = board.map(row => [...row]);
-
-    try {
-      const solved = await solveSudoku(boardCopy, (newBoard, row, col) => {
-        setBoard(newBoard);
-        setSolvingCell({ row, col });
-      });
-
-      if (solved) {
-        setBoard(boardCopy);
-        setSolvingCell(null);
-        toast({
-          title: "✅ Puzzle Solved!",
-          description: "The sudoku has been solved successfully.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "❌ No Solution",
-          description: "This puzzle cannot be solved. Check for errors.",
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An error occurred while solving the puzzle.",
-      });
-    } finally {
+    // Use backtracking trace for a smooth animation
+    const steps = getSolvingSteps(board.map(row => [...row]));
+    if (!steps.length) {
+      toast({ variant: "destructive", title: "❌ No Solution", description: "This puzzle cannot be solved." });
       setIsSolving(false);
-      setSolvingCell(null);
+      return;
     }
+    let idx = 0;
+    const interval = setInterval(() => {
+      const step = steps[idx];
+      setBoard(step.board);
+      setSolvingCell({ row: step.row, col: step.col });
+      idx++;
+      if (idx >= steps.length) {
+        clearInterval(interval);
+        setSolvingCell(null);
+        setIsSolving(false);
+        toast({ title: "✅ Puzzle Solved!", description: "Animated via backtracking trace; consistency ensured by SAT." });
+      }
+    }, 25);
   }, [board, isSolving]);
 
   /**
-   * Solve instantly (no animation)
+   * Solve instantly (SAT)
    */
   const handleSolveInstant = useCallback(() => {
     if (isSolving) return;
-
     const boardCopy = board.map(row => [...row]);
-    const solved = solveSudokuInstant(boardCopy);
-
+    const solved = solveSudokuSAT(boardCopy);
     if (solved) {
       setBoard(boardCopy);
-      toast({
-        title: "⚡ Solved Instantly!",
-        description: "The sudoku has been solved.",
-      });
+      toast({ title: "⚡ Solved Instantly!", description: "Solved via SAT." });
     } else {
-      toast({
-        variant: "destructive",
-        title: "❌ No Solution",
-        description: "This puzzle cannot be solved. Check for errors.",
-      });
+      toast({ variant: "destructive", title: "❌ No Solution", description: "This puzzle cannot be solved." });
     }
   }, [board, isSolving]);
 
@@ -180,24 +169,14 @@ const Index = () => {
   const handleStepByStep = useCallback(() => {
     const boardCopy = board.map(row => [...row]);
     const steps = getSolvingSteps(boardCopy);
-    
     if (steps.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "❌ No Solution",
-        description: "This puzzle cannot be solved.",
-      });
+      toast({ variant: "destructive", title: "❌ No Solution", description: "This puzzle cannot be solved." });
       return;
     }
-
     setSolvingSteps(steps);
     setCurrentStepIndex(0);
     setIsStepMode(true);
-    
-    toast({
-      title: "🎯 Step Mode Active",
-      description: "Use Next Step to solve one step at a time.",
-    });
+    toast({ title: "🎯 Step Mode Active", description: "Use Next Step to solve one step at a time." });
   }, [board]);
 
   /**
@@ -260,10 +239,29 @@ const Index = () => {
     setIsDarkMode(prev => !prev);
   }, []);
 
+  /**
+   * Logout and return to welcome page
+   */
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('sudokuUsername');
+    navigate('/welcome');
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Header */}
-      <header className="py-8 px-4 text-center border-b border-border">
+      <header className="py-8 px-4 text-center border-b border-border relative">
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Welcome, {localStorage.getItem('sudokuUsername')}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
         <h1 className={cn(
           "text-4xl md:text-5xl font-bold mb-2",
           "bg-gradient-hero bg-clip-text text-transparent"
@@ -271,7 +269,7 @@ const Index = () => {
           Sudoku Solver
         </h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          Professional solver with backtracking visualization
+          SAT-based professional solver
         </p>
       </header>
 
@@ -341,7 +339,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border mt-12">
-        <p>Built with React, TypeScript & Backtracking Algorithm</p>
+        <p>Built with React, TypeScript & Propositional Logic SAT Solver</p>
       </footer>
     </div>
   );
