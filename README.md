@@ -71,3 +71,16 @@ g++ sudoku.cpp -o sudoku
 
 # Step 3: Run with puzzle input
 ./sudoku puzzles/input.txt
+
+🧠 Real-World Applications of SAT
+    ✅ Microchip & hardware verification (Intel/AMD CPUs)
+    ✅ Software correctness (avionics, medical devices)
+    ✅ Cryptography & security analysis
+    ✅ AI planning & robotics
+    ✅ Scheduling (airlines, universities, factories)
+
+✨ Future Work
+    Add graphical interface for puzzle input/output
+    Support larger Sudoku variants (16×16, 25×25)
+    Step-by-step solving visualization
+    Optimize CNF encoding for speed
