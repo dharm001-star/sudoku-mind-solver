@@ -9,7 +9,7 @@ import SudokuGrid from '@/components/SudokuGrid';
 import ControlPanel from '@/components/ControlPanel';
 import ImageUpload from '@/components/ImageUpload';
 import StepController from '@/components/StepController';
-import { SudokuBoard, solveSudokuSAT, getSolvingSteps } from '@/utils/sudokuSolver';
+import { SudokuBoard, solveSudoku, getSolvingSteps } from '@/utils/sudokuSolver';
 import { createEmptyBoard, generateSudoku, examplePuzzle } from '@/utils/sudokuGenerator';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
